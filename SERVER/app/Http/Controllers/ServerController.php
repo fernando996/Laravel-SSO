@@ -97,4 +97,119 @@ class ServerController extends Controller
                 break;
         }
     }
+
+    public function login()
+    {
+        $config = [
+            'brokers' => [
+                'Alice' => [
+                    'secret' => '8iwzik1bwd',
+                    'domains' => ['localhost:8000'],
+                ],
+                'Greg' => [
+                    'secret' => '7pypoox2pc',
+                    'domains' => ['localhost'],
+                ],
+                'Julius' => [
+                    'secret' => 'ceda63kmhp',
+                    'domains' => ['localhost'],
+                ],
+            ],
+            'users' => [
+                'jackie' => [
+                    'fullname' => 'Jackie Black',
+                    'email' => 'jackie.black@example.com',
+                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
+                ],
+                'john' => [
+                    'fullname' => 'John Doe',
+                    'email' => 'john.doe@example.com',
+                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
+                ],
+            ],
+        ];
+
+        StartSession::start();
+
+        // Take the username and password from the POST params.
+        $username = $_POST['username'];
+        $password = $_POST['password'];
+
+        // Authenticate the user.
+        if (!isset($config['users'][$username]) || !password_verify($password, $config['users'][$username]['password'])) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => "Invalid credentials"]);
+            exit();
+        }
+
+        // Store the current user in the session.
+        $_SESSION['user'] = $username;
+
+        // Output user info as JSON.
+        $info = ['username' => $username] + $config['users'][$username];
+        unset($info['password']);
+
+        header('Content-Type: application/json');
+        echo json_encode($info);
+    }
+
+    public function logout()
+    {
+        StartSession::start();
+
+        // Clear the session user.
+        unset($_SESSION['user']);
+
+        // Done (no output)
+        http_response_code(204);
+    }
+
+    public function info()
+    {
+        // No user is logged in; respond with a 204 No content
+        if (!isset($_SESSION['user'])) {
+            http_response_code(204);
+            exit();
+        }
+
+        // Get the username from the session
+        $username = $_SESSION['user'];
+
+        $config = [
+            'brokers' => [
+                'Alice' => [
+                    'secret' => '8iwzik1bwd',
+                    'domains' => ['localhost:8000'],
+                ],
+                'Greg' => [
+                    'secret' => '7pypoox2pc',
+                    'domains' => ['localhost'],
+                ],
+                'Julius' => [
+                    'secret' => 'ceda63kmhp',
+                    'domains' => ['localhost'],
+                ],
+            ],
+            'users' => [
+                'jackie' => [
+                    'fullname' => 'Jackie Black',
+                    'email' => 'jackie.black@example.com',
+                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
+                ],
+                'john' => [
+                    'fullname' => 'John Doe',
+                    'email' => 'john.doe@example.com',
+                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
+                ],
+            ],
+        ];
+
+        // Output user info as JSON.
+        $info = ['username' => $username] + $config['users'][$username];
+        unset($info['password']);
+
+        header('Content-Type: application/json');
+        echo json_encode($info);
+    }
 }

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ServerController;
+use App\Http\Controllers\ClientController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,10 +18,5 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/server', [ServerController::class, 'index']);
-Route::post('/server', [ServerController::class, 'index']);
 
-Route::post('/login', [ServerController::class, 'login']);
-
-Route::post('/logout', [ServerController::class, 'logout']);
-
+Route::get('/home', [ClientController::class, 'index']);
