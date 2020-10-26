@@ -6,39 +6,15 @@ use Illuminate\Http\Request;
 use Jasny\SSO\Server\Server;
 use Jasny\SSO\Server\ExceptionInterface as SSOException;
 use Desarrolla2\Cache\File as FileCache;
+use Illuminate\Support\Facades\Log;
+use Loggy;
+use Session;
 
 class ServerController extends Controller
 {
     public function index()
     {
-        $config = [
-            'brokers' => [
-                'Alice' => [
-                    'secret' => '8iwzik1bwd',
-                    'domains' => ['localhost'],
-                ],
-                'Greg' => [
-                    'secret' => '7pypoox2pc',
-                    'domains' => ['localhost'],
-                ],
-                'Julius' => [
-                    'secret' => 'ceda63kmhp',
-                    'domains' => ['localhost'],
-                ],
-            ],
-            'users' => [
-                'jackie' => [
-                    'fullname' => 'Jackie Black',
-                    'email' => 'jackie.black@example.com',
-                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
-                ],
-                'john' => [
-                    'fullname' => 'John Doe',
-                    'email' => 'john.doe@example.com',
-                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
-                ],
-            ],
-        ];
+        $config = Config::get();
 
         // Instantiate the SSO server.
         $ssoServer = (new Server(
@@ -46,7 +22,8 @@ class ServerController extends Controller
                 return $config['brokers'][$id] ?? null;  // Callback to get the broker secret. You might fetch this from DB.
             },
             new FileCache(sys_get_temp_dir())
-        ));
+        ))->withLogger(new Loggy('SSO'));
+
         //->withLogger(new Loggy('SSO'));
 
         try {
@@ -98,36 +75,9 @@ class ServerController extends Controller
         }
     }
 
-    public function login()
+    public function login(Request $request)
     {
-        $config = [
-            'brokers' => [
-                'Alice' => [
-                    'secret' => '8iwzik1bwd',
-                    'domains' => ['localhost:8000'],
-                ],
-                'Greg' => [
-                    'secret' => '7pypoox2pc',
-                    'domains' => ['localhost'],
-                ],
-                'Julius' => [
-                    'secret' => 'ceda63kmhp',
-                    'domains' => ['localhost'],
-                ],
-            ],
-            'users' => [
-                'jackie' => [
-                    'fullname' => 'Jackie Black',
-                    'email' => 'jackie.black@example.com',
-                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
-                ],
-                'john' => [
-                    'fullname' => 'John Doe',
-                    'email' => 'john.doe@example.com',
-                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
-                ],
-            ],
-        ];
+        $config = Config::get();
 
         StartSession::start();
 
@@ -144,72 +94,55 @@ class ServerController extends Controller
         }
 
         // Store the current user in the session.
-        $_SESSION['user'] = $username;
+        // $_SESSION['user'] = $username;
+
+        // session(['user' =>  $username]);
+
+
+        // $request->session()->put('user', $username);
+
+        Session::put('user', $username);
 
         // Output user info as JSON.
         $info = ['username' => $username] + $config['users'][$username];
         unset($info['password']);
 
-        header('Content-Type: application/json');
-        echo json_encode($info);
+        // header('Content-Type: application/json');
+        return  response()->json($info);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
         StartSession::start();
 
         // Clear the session user.
-        unset($_SESSION['user']);
+        // unset($_SESSION['user']);
+
+        session(['user' =>  null]);
+
 
         // Done (no output)
         http_response_code(204);
     }
 
-    public function info()
+    public function info(Request $request)
     {
+        Log::info(["aaa" => Session::get('user', '2')]);
         // No user is logged in; respond with a 204 No content
-        if (!isset($_SESSION['user'])) {
+        if (!session('user')) {
             http_response_code(204);
             exit();
         }
 
         // Get the username from the session
-        $username = $_SESSION['user'];
+        $username = session('user'); //$_SESSION['user'];
 
-        $config = [
-            'brokers' => [
-                'Alice' => [
-                    'secret' => '8iwzik1bwd',
-                    'domains' => ['localhost:8000'],
-                ],
-                'Greg' => [
-                    'secret' => '7pypoox2pc',
-                    'domains' => ['localhost'],
-                ],
-                'Julius' => [
-                    'secret' => 'ceda63kmhp',
-                    'domains' => ['localhost'],
-                ],
-            ],
-            'users' => [
-                'jackie' => [
-                    'fullname' => 'Jackie Black',
-                    'email' => 'jackie.black@example.com',
-                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
-                ],
-                'john' => [
-                    'fullname' => 'John Doe',
-                    'email' => 'john.doe@example.com',
-                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
-                ],
-            ],
-        ];
+        $config = Config::get();
 
         // Output user info as JSON.
         $info = ['username' => $username] + $config['users'][$username];
         unset($info['password']);
 
-        header('Content-Type: application/json');
-        echo json_encode($info);
+        return  response()->json($info);
     }
 }

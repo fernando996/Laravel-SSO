@@ -3,21 +3,23 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Jasny\SSO\Broker\Broker;
+use Illuminate\Support\Facades\Log;
 // use App\Http\Controllers\Attach;
+use Illuminate\Validation\ValidationException;
 
 class ClientController extends Controller
 {
     public function index()
     {
-        $broker = Attach::Attach();
+        $attach = new Attach();
+        $broker =  $attach->Attach();
 
         if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
 
         if ($broker['brokerId'] ?? false) return view('error', $broker);
 
         try {
-            $userInfo = $broker['broker']->request('GET', '/api/info');
+            $userInfo = $broker['broker']->request('GET', '/info');
         } catch (\RuntimeException $exception) {
 
             $brokerId = getenv('SSO_BROKER_ID');
@@ -31,5 +33,57 @@ class ClientController extends Controller
         }
 
         return view('home', ['broker' => $broker['broker'], 'userInfo' => $userInfo]);
+    }
+
+    public function login()
+    {
+        $attach = new Attach();
+        $broker =  $attach->Attach();
+
+        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
+
+        if ($broker['brokerId'] ?? false) return view('error', $broker);
+
+        return view('login', ['broker' => $broker['broker']]);
+    }
+
+    public function loginPost(Request $request)
+    {
+
+
+        $attach = new Attach();
+        $broker =  $attach->Attach();
+
+        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
+
+        if ($broker['brokerId'] ?? false) return view('error', $broker);
+
+        try {
+            $data = $request->validate([
+                'username' => 'required',
+                'password' => 'required',
+                '_token' => 'required'
+            ]);
+        } catch (ValidationException $th) {
+            return redirect('/home');
+        }
+
+        try {
+
+            $credentials = [
+                // 'username' => $_POST['username'],
+                // 'password' => $_POST['password']
+                'username' => $data['username'],
+                'password' => $data['password'],
+            ];
+
+            $broker['broker']->request('POST', '/login', $credentials);
+
+            return redirect('/home');
+        } catch (\RuntimeException $exception) {
+            $error = $exception->getMessage();
+        }
+
+        return view('login', ['broker' => $broker['broker'], 'error' => $error]);
     }
 }

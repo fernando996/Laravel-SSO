@@ -5,39 +5,13 @@ namespace App\Http\Controllers;
 use Jasny\SSO\Server\Server;
 use Jasny\SSO\Server\ExceptionInterface as SSOException;
 use Desarrolla2\Cache\File as FileCache;
+use Loggy;
 
 class StartSession extends Controller
 {
     public static function start()
     {
-        $config = [
-            'brokers' => [
-                'Alice' => [
-                    'secret' => '8iwzik1bwd',
-                    'domains' => ['localhost'],
-                ],
-                'Greg' => [
-                    'secret' => '7pypoox2pc',
-                    'domains' => ['localhost'],
-                ],
-                'Julius' => [
-                    'secret' => 'ceda63kmhp',
-                    'domains' => ['localhost'],
-                ],
-            ],
-            'users' => [
-                'jackie' => [
-                    'fullname' => 'Jackie Black',
-                    'email' => 'jackie.black@example.com',
-                    'password' => '$2y$10$lVUeiphXLAm4pz6l7lF9i.6IelAqRxV4gCBu8GBGhCpaRb6o0qzUO' // jackie123
-                ],
-                'john' => [
-                    'fullname' => 'John Doe',
-                    'email' => 'john.doe@example.com',
-                    'password' => '$2y$10$RU85KDMhbh8pDhpvzL6C5.kD3qWpzXARZBzJ5oJ2mFoW7Ren.apC2' // john123
-                ],
-            ],
-        ];
+        $config = Config::get();
 
         // Instantiate the SSO server.
         $ssoServer = (new Server(
@@ -45,10 +19,11 @@ class StartSession extends Controller
                 return $config['brokers'][$id] ?? null;  // Callback to get the broker secret. You might fetch this from DB.
             },
             new FileCache(sys_get_temp_dir())            // Any PSR-16 compatible cache
-        ));
-        //->withLogger(new Loggy('SSO'));
+        ))
+            ->withLogger(new Loggy('SSO'));
 
         // Start the session using the broker bearer token (rather than a session cookie).
+
         try {
             $ssoServer->startBrokerSession();
         } catch (SsoException $exception) {
