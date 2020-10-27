@@ -29,6 +29,7 @@ class ServerController extends Controller
         try {
             // Attach the broker token to the user session. Uses query parameters from $_GET.
             $verificationCode = $ssoServer->attach();
+            // 
             $error = null;
         } catch (SSOException $exception) {
             $verificationCode = null;
@@ -94,14 +95,7 @@ class ServerController extends Controller
         }
 
         // Store the current user in the session.
-        // $_SESSION['user'] = $username;
-
-        // session(['user' =>  $username]);
-
-
-        // $request->session()->put('user', $username);
-
-        Session::put('user', $username);
+        $_SESSION['user'] = $username;
 
         // Output user info as JSON.
         $info = ['username' => $username] + $config['users'][$username];
@@ -116,9 +110,8 @@ class ServerController extends Controller
         StartSession::start();
 
         // Clear the session user.
-        // unset($_SESSION['user']);
+        unset($_SESSION['user']);
 
-        session(['user' =>  null]);
 
 
         // Done (no output)
@@ -127,17 +120,30 @@ class ServerController extends Controller
 
     public function info(Request $request)
     {
-        Log::info(["aaa" => Session::get('user', '2')]);
+
+        StartSession::start();
+        // if (!isset($_SESSION['user'])) {
+        //     http_response_code(204);
+        //     exit();
+        // }
+
+
+        Log::info($_SESSION['user'] ?? '');
+
+
         // No user is logged in; respond with a 204 No content
-        if (!session('user')) {
+        if (!($_SESSION['user'] ?? false)) {
             http_response_code(204);
             exit();
         }
 
         // Get the username from the session
-        $username = session('user'); //$_SESSION['user'];
+        $username = $_SESSION['user'];
 
         $config = Config::get();
+
+
+        Log::info($username);
 
         // Output user info as JSON.
         $info = ['username' => $username] + $config['users'][$username];

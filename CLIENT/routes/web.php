@@ -22,4 +22,4 @@ Route::get('/', function () {
 Route::get('/home', [ClientController::class, 'index']);
 Route::get('/login', [ClientController::class, 'login']);
 Route::post('/login', [ClientController::class, 'loginPost']);
-
+Route::get('/logout', [ClientController::class, 'logout']);

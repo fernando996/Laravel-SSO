@@ -11,8 +11,7 @@ class ClientController extends Controller
 {
     public function index()
     {
-        $attach = new Attach();
-        $broker =  $attach->Attach();
+        $broker = Attach::Attach();
 
         if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
 
@@ -32,13 +31,14 @@ class ClientController extends Controller
             return view('error', ['brokerId' => $brokerId, 'error' => $error, 'errorDetails' => $errorDetails]);
         }
 
+
+
         return view('home', ['broker' => $broker['broker'], 'userInfo' => $userInfo]);
     }
 
     public function login()
     {
-        $attach = new Attach();
-        $broker =  $attach->Attach();
+        $broker = Attach::Attach();
 
         if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
 
@@ -49,10 +49,7 @@ class ClientController extends Controller
 
     public function loginPost(Request $request)
     {
-
-
-        $attach = new Attach();
-        $broker =  $attach->Attach();
+        $broker = Attach::Attach();
 
         if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
 
@@ -85,5 +82,30 @@ class ClientController extends Controller
         }
 
         return view('login', ['broker' => $broker['broker'], 'error' => $error]);
+    }
+
+    public function logout()
+    {
+        $broker = Attach::Attach();
+
+        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
+
+        if ($broker['brokerId'] ?? false) return view('error', $broker);
+
+        try {
+            $userInfo = $broker['broker']->request('POST', '/logout');
+        } catch (\RuntimeException $exception) {
+
+            $brokerId = getenv('SSO_BROKER_ID');
+
+            $error = isset($exception) ? $exception->getMessage() : ($_GET['sso_error'] ?? "Unknown error");
+            $errorDetails = isset($exception) && $exception->getPrevious() !== null
+                ? $exception->getPrevious()->getMessage()
+                : null;
+
+            return view('error', ['brokerId' => $brokerId, 'error' => $error, 'errorDetails' => $errorDetails]);
+        }
+
+        return redirect("home");
     }
 }

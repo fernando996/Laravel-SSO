@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Jasny\SSO\Broker\Broker;
+use Illuminate\Support\Facades\Log;
 
 class Attach extends Controller
 {
@@ -17,6 +18,7 @@ class Attach extends Controller
 
         // Handle error from SSO server
         if (isset($_GET['sso_error'])) {
+            Log::info("sso_error");
             $brokerId = getenv('SSO_BROKER_ID');
 
             $error = isset($exception) ? $exception->getMessage() : ($_GET['sso_error'] ?? "Unknown error");
@@ -29,6 +31,7 @@ class Attach extends Controller
 
         // Handle verification from SSO server
         if (isset($_GET['sso_verify'])) {
+            Log::info("sso_verify");
 
             $broker->verify($_GET['sso_verify']);
 
@@ -41,6 +44,7 @@ class Attach extends Controller
 
         // Attach through redirect if the client isn't attached yet.
         if (!$broker->isAttached()) {
+            Log::info("isAttached");
 
             $returnUrl = (!empty($_SERVER['HTTPS']) ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
 
@@ -48,6 +52,8 @@ class Attach extends Controller
 
             return self::setReturn($attachUrl);
         }
+
+        Log::info(var_dump($broker));
 
         return self::setReturn('', $broker);
     }
