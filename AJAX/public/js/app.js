@@ -20,7 +20,7 @@
                 return;
             }
 
-            $.ajax({method: 'POST', url: 'verify.php', data: data}).done(function () {
+            $.ajax({method: 'POST', url: '/api/verify', data: data}).done(function () {
                 doApiRequest('info', null, showUserInfo);
             });
         });
@@ -40,7 +40,7 @@
     function doApiRequest(command, params, callback)
     {
         const req = $.ajax({
-            url: 'api.php?command=' + command,
+            url: 'api?command=' + command,
             method: params ? 'POST' : 'GET',
             data: params,
             dataType: 'json'
