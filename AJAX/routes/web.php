@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AjaxController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,7 +21,8 @@ Route::get('/', function () {
 
 Route::get('/attach', [AjaxController::class, 'attach']);
 
-Route::get('/home', [AjaxController::class, 'index']);
+
+
 Route::get('/login', [AjaxController::class, 'login']);
 Route::post('/login', [AjaxController::class, 'loginPost']);
 Route::get('/logout', [AjaxController::class, 'logout']);
