@@ -20,3 +20,8 @@ Route::get('/', function () {
 
 Route::get('/server', [ServerController::class, 'index']);
 Route::post('/server', [ServerController::class, 'index']);
+
+Route::post('/logout', [ServerController::class, 'logout']);
+
+Route::get('/info', [ServerController::class, 'info']);
+Route::post('/login', [ServerController::class, 'login']);

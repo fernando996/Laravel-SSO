@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "05f67174f7efa58dbd89bb173e97ae44",
+    "content-hash": "87d941676b6a4e877edb81ad9141a519",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4452,6 +4452,45 @@
             ],
             "description": "A robust cross-platform utility for normalizing, comparing and modifying file paths.",
             "time": "2015-12-17T08:42:14+00:00"
+        },
+        {
+            "name": "yubb/loggy",
+            "version": "2.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://bitbucket.org/yubb/loggy.git",
+                "reference": "f441b581c45afc256dd273d89c80b5f0e8cb2c0f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://bitbucket.org/yubb/loggy/get/f441b581c45afc256dd273d89c80b5f0e8cb2c0f.zip",
+                "reference": "f441b581c45afc256dd273d89c80b5f0e8cb2c0f",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=5.6",
+                "psr/log": "^1.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "Loggy": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordan Teachworth",
+                    "email": "jordan.teachworth@zlien.com"
+                }
+            ],
+            "description": "Simple, lightweight logger to stdout in JSON format",
+            "homepage": "https://bitbucket.org/yubb/loggy",
+            "time": "2020-01-03T18:23:02+00:00"
         }
     ],
     "packages-dev": [
