@@ -21,113 +21,58 @@ class AjaxController extends Controller
 
         $jsCallback = $_GET['callback'];
 
+
         // Already attached
         if ($broker->isAttached()) {
+
+            Log::info($jsCallback);
             echo $jsCallback . '(null, 200)';
         }
 
         // Attach through redirect if the client isn't attached yet.
         $url = $broker->getAttachUrl(['callback' => $jsCallback]);
-        header("Location: $url", true, 303);
+        // header("Location: $url", true, 303);
+        return redirect($url);
+    }
+
+    public function verify()
+    {
+        // Configure the broker.
+        $broker = new Broker(
+            getenv('SSO_SERVER'),
+            getenv('SSO_BROKER_ID'),
+            getenv('SSO_BROKER_SECRET')
+        );
+
+        // Set the verification cookie.
+        // Don't do this in JS using document.cookie, because an XSS vulnerability would grand access to the session.
+        $broker->verify($_POST['verify']);
+
+        http_response_code(204);
     }
 
     public function index()
     {
-        $broker = Attach::Attach();
-
-        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
-
-        if ($broker['brokerId'] ?? false) return view('error', $broker);
-
-        try {
-            $userInfo = $broker['broker']->request('GET', '/info');
-        } catch (\RuntimeException $exception) {
-
-            $brokerId = getenv('SSO_BROKER_ID');
-
-            $error = isset($exception) ? $exception->getMessage() : ($_GET['sso_error'] ?? "Unknown error");
-            $errorDetails = isset($exception) && $exception->getPrevious() !== null
-                ? $exception->getPrevious()->getMessage()
-                : null;
-
-            return view('error', ['brokerId' => $brokerId, 'error' => $error, 'errorDetails' => $errorDetails]);
-        }
-
-
-
-        return view('home', ['broker' => $broker['broker'], 'userInfo' => $userInfo]);
-    }
-
-    public function login()
-    {
-        $broker = Attach::Attach();
-
-        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
-
-        if ($broker['brokerId'] ?? false) return view('error', $broker);
-
-        return view('login', ['broker' => $broker['broker']]);
-    }
-
-    public function loginPost(Request $request)
-    {
-        $broker = Attach::Attach();
-
-        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
-
-        if ($broker['brokerId'] ?? false) return view('error', $broker);
+        // Configure the broker.
+        $broker = new Broker(
+            getenv('SSO_SERVER'),
+            getenv('SSO_BROKER_ID'),
+            getenv('SSO_BROKER_SECRET')
+        );
 
         try {
-            $data = $request->validate([
-                'username' => 'required',
-                'password' => 'required',
-                '_token' => 'required'
-            ]);
-        } catch (ValidationException $th) {
-            return redirect('/home');
+            $path = '' . $_GET['command'];
+            $result = $broker->request($_SERVER['REQUEST_METHOD'], $path, $_POST);
+        } catch (\Exception $e) {
+            $status = $e->getCode() ?: 500;
+            $result = ['error' => $e->getMessage()];
         }
 
-        try {
-
-            $credentials = [
-                // 'username' => $_POST['username'],
-                // 'password' => $_POST['password']
-                'username' => $data['username'],
-                'password' => $data['password'],
-            ];
-
-            $broker['broker']->request('POST', '/login', $credentials);
-
-            return redirect('/home');
-        } catch (\RuntimeException $exception) {
-            $error = $exception->getMessage();
+        // REST
+        if (!$result) {
+            return response()->json([], 204);
+        } else {
+            return response()->json($result, isset($status) ? $status : 200);
         }
-
-        return view('login', ['broker' => $broker['broker'], 'error' => $error]);
-    }
-
-    public function logout()
-    {
-        $broker = Attach::Attach();
-
-        if ($broker['redirect'] ?? false) return redirect($broker['redirect']);
-
-        if ($broker['brokerId'] ?? false) return view('error', $broker);
-
-        try {
-            $userInfo = $broker['broker']->request('POST', '/logout');
-        } catch (\RuntimeException $exception) {
-
-            $brokerId = getenv('SSO_BROKER_ID');
-
-            $error = isset($exception) ? $exception->getMessage() : ($_GET['sso_error'] ?? "Unknown error");
-            $errorDetails = isset($exception) && $exception->getPrevious() !== null
-                ? $exception->getPrevious()->getMessage()
-                : null;
-
-            return view('error', ['brokerId' => $brokerId, 'error' => $error, 'errorDetails' => $errorDetails]);
-        }
-
-        return redirect("home");
     }
 }
